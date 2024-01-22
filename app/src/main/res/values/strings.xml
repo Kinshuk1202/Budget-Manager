@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Budget Manager</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="enter_your_username">Enter Your Name</string>
+    <string name="enter_your_mail">Enter Your Email</string>
+    <string name="enter_your_password">Create Password</string>
+    <string name="verify_your_password">Re-enter Your Password</string>
+    <string name="enter_your_budget">Enter Your Budget</string>
+</resources>
