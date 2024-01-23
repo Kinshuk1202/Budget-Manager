@@ -55,6 +55,8 @@
                 android:layout_height="50dp"
                 android:background="@color/white"
                 android:hint="@string/enter_your_mail"
+                android:textColorHint="@color/black"
+                android:textColor="@color/black"
                 android:inputType="text"
                 android:paddingStart="12dp"
                 android:paddingTop="15dp" />
@@ -83,7 +85,7 @@
             android:background="@color/white"
             app:boxStrokeWidthFocused="0dp"
             app:endIconMode="password_toggle"
-
+            app:endIconTint="@color/black"
             app:boxStrokeWidth="2dp"
             app:boxStrokeColor="@color/themeBg"
             app:hintEnabled="false"
@@ -95,6 +97,8 @@
                 android:layout_height="50dp"
                 android:background="@color/white"
                 android:inputType="text"
+                android:textColorHint="@color/black"
+                android:textColor="@color/black"
                 android:paddingStart="12dp"
                 android:hint="Enter Your Password"
                 android:paddingTop="15dp" />

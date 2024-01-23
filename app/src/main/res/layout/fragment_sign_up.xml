@@ -54,6 +54,8 @@
                 android:background="@color/white"
                 android:hint="@string/enter_your_username"
                 android:inputType="text"
+                android:textColorHint="@color/black"
+                android:textColor="@color/black"
                 android:paddingStart="12dp"
                 android:paddingTop="15dp" />
         </com.google.android.material.textfield.TextInputLayout>
@@ -91,6 +93,8 @@
                 android:layout_height="50dp"
                 android:background="@color/white"
                 android:hint="@string/enter_your_mail"
+                android:textColorHint="@color/black"
+                android:textColor="@color/black"
                 android:inputType="text"
                 android:paddingStart="12dp"
                 android:paddingTop="15dp" />
@@ -118,6 +122,7 @@
             android:layout_height="50dp"
             android:background="@color/white"
             app:endIconMode="password_toggle"
+            app:endIconTint="@color/black"
             app:boxStrokeWidthFocused="0dp"
             app:boxStrokeWidth="2dp"
             app:boxStrokeColor="@color/themeBg"
@@ -131,6 +136,8 @@
                 android:hint="@string/enter_your_password"
                 android:inputType="text"
                 android:paddingStart="12dp"
+                android:textColorHint="@color/black"
+                android:textColor="@color/black"
                 android:paddingTop="15dp" />
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -157,6 +164,7 @@
             android:background="@color/white"
             app:boxStrokeWidthFocused="0dp"
             app:endIconMode="password_toggle"
+            app:endIconTint="@color/black"
             app:boxStrokeWidth="2dp"
             app:boxStrokeColor="@color/themeBg"
             app:hintEnabled="false">
@@ -168,6 +176,8 @@
                 android:background="@color/white"
                 android:hint="@string/verify_your_password"
                 android:inputType="text"
+                android:textColorHint="@color/black"
+                android:textColor="@color/black"
                 android:paddingStart="12dp"
                 android:paddingTop="15dp" />
         </com.google.android.material.textfield.TextInputLayout>

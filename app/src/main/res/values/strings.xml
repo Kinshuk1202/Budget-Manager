@@ -7,4 +7,6 @@
     <string name="enter_your_password">Create Password</string>
     <string name="verify_your_password">Re-enter Your Password</string>
     <string name="enter_your_budget">Enter Your Budget</string>
+    <string name="enter_the_amount">Enter the Amount</string>
+    <string name="add_a_note_if_any">Add a Note (if any)</string>
 </resources>

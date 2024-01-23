@@ -2,12 +2,12 @@ package com.kinshuk.budgetmanaget.fragments
 
 import android.app.Dialog
 import android.os.Bundle
+import android.transition.Transition
 import android.util.Log
 import android.view.*
-import android.widget.EditText
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.content.res.AppCompatResources.getDrawable
 import androidx.core.text.isDigitsOnly
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
@@ -15,14 +15,17 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.datepicker.MaterialTextInputPicker
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.FieldValue.arrayUnion
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.kinshuk.budgetmanaget.R
+import com.kinshuk.budgetmanaget.dataClasses.Transaction
 import com.kinshuk.budgetmanaget.databinding.FragmentHomeBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.w3c.dom.Text
 import java.util.*
 
 
@@ -35,6 +38,8 @@ class HomeFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         (activity as AppCompatActivity?)!!.supportActionBar!!.show()
+        (activity as AppCompatActivity?)!!.supportActionBar!!.
+                setBackgroundDrawable(getDrawable(context!!.applicationContext,R.color.themeBg))
         setHasOptionsMenu(true)
     }
 
@@ -56,6 +61,71 @@ class HomeFragment : Fragment() {
 
         binding.editBudget.setOnClickListener{
             showEditDialog()
+        }
+        binding.addTransaction.setOnClickListener {
+            showAddDialog()
+        }
+    }
+
+    private fun showAddDialog() {
+        val dialog = Dialog(context!!)
+        dialog.setCancelable(true)
+
+        val view: View = activity!!.layoutInflater.inflate(R.layout.add_transaction_popup, null)
+        dialog.setContentView(view)
+
+        val cancel = view.findViewById(R.id.cancelBtn) as MaterialButton
+        val done = view.findViewById(R.id.DoneBtn) as MaterialButton
+        cancel.setOnClickListener {
+            dialog.dismiss()
+        }
+        done.setOnClickListener {
+            val amount = view.findViewById<EditText>(R.id.transactionEt).text.toString()
+            val note = view.findViewById<EditText>(R.id.noteEt).text.toString()
+            val creditiedBtn = view.findViewById<RadioButton>(R.id.radio_credit)
+            val debitedBtn = view.findViewById<RadioButton>(R.id.radio_debit)
+            val radioGroup = view.findViewById<RadioGroup>(R.id.radioGroup)
+            val creditSelected = radioGroup.checkedRadioButtonId == R.id.radio_credit
+            val debitSelected = radioGroup.checkedRadioButtonId == R.id.radio_debit
+            if(amount.isNotEmpty() && (creditSelected || debitSelected))
+            {
+                val type = !debitSelected
+                val transaction = Transaction(System.currentTimeMillis().toString(),amount.toInt(),type,note)
+                userRef.update("totalTransactions",arrayUnion(transaction)).addOnFailureListener {
+                    Toast.makeText(context!!.applicationContext,"Unexpected error! Try Again",Toast.LENGTH_LONG).show()
+                }
+                    .addOnCompleteListener {
+                        addTransaction(amount,type)
+                    }
+                dialog.dismiss()
+            }
+            else
+            {
+                Toast.makeText(context,"Please enter both amount and type",Toast.LENGTH_LONG).show()
+            }
+
+        }
+
+
+        dialog.window?.setLayout(1000, 1400)
+        dialog.show();
+    }
+
+    private fun addTransaction(amount: String, type: Boolean) {
+        val money = amount.toInt()
+
+        userRef.get().addOnSuccessListener { documentSnapshot ->
+            if (documentSnapshot.exists()) {
+                val data = documentSnapshot.data
+                val current = data?.get("spent") as? Long ?: 0L
+                val finalSpent = if (!type) money + current else current - money
+                userRef.update("spent", finalSpent).addOnSuccessListener {
+                    Toast.makeText(context?.applicationContext, "Added Sucessfully", Toast.LENGTH_LONG).show()
+                    initValues()
+                }
+            }
+        }.addOnFailureListener {
+            Toast.makeText(context?.applicationContext, "Unexpected error! Try Again", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -118,12 +188,13 @@ class HomeFragment : Fragment() {
                         val lastDay: Int = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
                         val currentDay: Int = calendar.get(Calendar.DAY_OF_MONTH)
                         val daysLeft = lastDay - currentDay+1
-                        Log.d("TAGY",daysLeft.toString())
                         var Safemoney = (budget.toInt()-spent.toInt())/daysLeft
                         if(Safemoney<0)
                             Safemoney = 0
                         binding.safeTv.text = "₹$Safemoney/day"
                         var precent:Double = (spent.toDouble()/budget.toDouble())*100
+                        if(budget.toInt() == 0)
+                            precent = 0.0
                         val finalPer:Double = String.format("%.2f", precent).toDouble()
                         if(budget.toInt() == 0)
                             precent = 0.0
@@ -142,6 +213,8 @@ class HomeFragment : Fragment() {
         }
     }
 
+
+
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         super.onCreateOptionsMenu(menu, inflater)
         inflater.inflate(R.menu.home_menu,menu)
@@ -158,7 +231,6 @@ class HomeFragment : Fragment() {
 
         return super.onOptionsItemSelected(item)
     }
-
 
 
 }
