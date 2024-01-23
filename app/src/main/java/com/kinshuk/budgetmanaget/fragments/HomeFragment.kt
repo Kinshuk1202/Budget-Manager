@@ -15,6 +15,8 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.datepicker.MaterialTextInputPicker
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FieldValue.arrayRemove
 import com.google.firebase.firestore.FieldValue.arrayUnion
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
@@ -65,6 +67,10 @@ class HomeFragment : Fragment() {
         binding.addTransaction.setOnClickListener {
             showAddDialog()
         }
+        binding.showAll.setOnClickListener {
+            val navControler = Navigation.findNavController(it)
+            navControler.navigate(R.id.action_homeFragment_to_transactionListFragment)
+        }
     }
 
     private fun showAddDialog() {
@@ -80,10 +86,10 @@ class HomeFragment : Fragment() {
             dialog.dismiss()
         }
         done.setOnClickListener {
+            binding.CorutineProgBar.visibility = View.VISIBLE
+            binding.fullscreen.visibility = View.GONE
             val amount = view.findViewById<EditText>(R.id.transactionEt).text.toString()
             val note = view.findViewById<EditText>(R.id.noteEt).text.toString()
-            val creditiedBtn = view.findViewById<RadioButton>(R.id.radio_credit)
-            val debitedBtn = view.findViewById<RadioButton>(R.id.radio_debit)
             val radioGroup = view.findViewById<RadioGroup>(R.id.radioGroup)
             val creditSelected = radioGroup.checkedRadioButtonId == R.id.radio_credit
             val debitSelected = radioGroup.checkedRadioButtonId == R.id.radio_debit
@@ -92,6 +98,8 @@ class HomeFragment : Fragment() {
                 val type = !debitSelected
                 val transaction = Transaction(System.currentTimeMillis().toString(),amount.toInt(),type,note)
                 userRef.update("totalTransactions",arrayUnion(transaction)).addOnFailureListener {
+                    binding.CorutineProgBar.visibility = View.GONE
+                    binding.fullscreen.visibility = View.VISIBLE
                     Toast.makeText(context!!.applicationContext,"Unexpected error! Try Again",Toast.LENGTH_LONG).show()
                 }
                     .addOnCompleteListener {
@@ -101,6 +109,8 @@ class HomeFragment : Fragment() {
             }
             else
             {
+                binding.CorutineProgBar.visibility = View.GONE
+                binding.fullscreen.visibility = View.VISIBLE
                 Toast.makeText(context,"Please enter both amount and type",Toast.LENGTH_LONG).show()
             }
 
@@ -113,7 +123,6 @@ class HomeFragment : Fragment() {
 
     private fun addTransaction(amount: String, type: Boolean) {
         val money = amount.toInt()
-
         userRef.get().addOnSuccessListener { documentSnapshot ->
             if (documentSnapshot.exists()) {
                 val data = documentSnapshot.data
@@ -142,11 +151,15 @@ class HomeFragment : Fragment() {
             dialog.cancel()
         }
         done.setOnClickListener{
+            binding.CorutineProgBar.visibility = View.VISIBLE
+            binding.fullscreen.visibility = View.GONE
             val newVal:EditText = view.findViewById(R.id.budgetEt)
             val budgetVal = newVal.text.toString()
             if(budgetVal.isNotEmpty() && budgetVal.isDigitsOnly()){
                 Log.d("TAGY",budgetVal.isDigitsOnly().toString())
                 userRef.update("budget",budgetVal.toInt()).addOnFailureListener {
+                    binding.CorutineProgBar.visibility = View.GONE
+                    binding.fullscreen.visibility = View.VISIBLE
                     Toast.makeText(context,"Unexpected error! Try Again",Toast.LENGTH_LONG).show()
                 }
                     .addOnSuccessListener {
@@ -156,7 +169,8 @@ class HomeFragment : Fragment() {
             }
             else
             {
-                Log.d("TAGY",budgetVal)
+                binding.CorutineProgBar.visibility = View.GONE
+                binding.fullscreen.visibility = View.VISIBLE
                 Toast.makeText(context,"Enter Valid Amount",Toast.LENGTH_LONG).show()
             }
 
@@ -169,50 +183,50 @@ class HomeFragment : Fragment() {
 
         binding.CorutineProgBar.visibility = View.VISIBLE
         binding.fullscreen.visibility = View.GONE
-        CoroutineScope(Dispatchers.IO).launch {
-            userRef.get()
-                .addOnSuccessListener {
-                    if(it.exists())
-                    {
-                        val data = it.data
-                        val name = data?.get("name").toString()
-                        val budget = data?.get("budget").toString()
-                        val spent = data?.get("spent").toString()
-                        binding.BudgetTv.text = "₹$budget"
-                        binding.SpentTv.text = "₹$spent"
-                        binding.GreetTv.text = name
-                        binding.CorutineProgBar.visibility = View.GONE
-                        binding.fullscreen.visibility = View.VISIBLE
+        userRef.get()
+            .addOnSuccessListener {
+                if(it.exists())
+                {
+                    val data = it.data
+                    val name = data?.get("name").toString()
+                    val budget = data?.get("budget").toString()
+                    val spent = data?.get("spent").toString()
+                    val preTimeStamp = data?.get("lastIn").toString()
+                    binding.BudgetTv.text = "₹$budget"
+                    binding.SpentTv.text = "₹$spent"
+                    binding.GreetTv.text = name
+                    binding.CorutineProgBar.visibility = View.GONE
+                    binding.fullscreen.visibility = View.VISIBLE
 
-                        val calendar = Calendar.getInstance()
-                        val lastDay: Int = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
-                        val currentDay: Int = calendar.get(Calendar.DAY_OF_MONTH)
-                        val daysLeft = lastDay - currentDay+1
-                        var Safemoney = (budget.toInt()-spent.toInt())/daysLeft
-                        if(Safemoney<0)
-                            Safemoney = 0
-                        binding.safeTv.text = "₹$Safemoney/day"
-                        var precent:Double = (spent.toDouble()/budget.toDouble())*100
-                        if(budget.toInt() == 0)
-                            precent = 0.0
-                        val finalPer:Double = String.format("%.2f", precent).toDouble()
-                        if(budget.toInt() == 0)
-                            precent = 0.0
-                        binding.progressText.text = "$finalPer%"
-                        binding.Prog.setProgress(finalPer.toInt(),true)
+                    val calendar = Calendar.getInstance()
+                    val lastDay: Int = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
+                    val currentDay: Int = calendar.get(Calendar.DAY_OF_MONTH)
+                    val daysLeft = lastDay - currentDay+1
+                    var Safemoney = (budget.toInt()-spent.toInt())/daysLeft
+                    if(Safemoney<0)
+                        Safemoney = 0
+                    binding.safeTv.text = "₹$Safemoney/day"
+                    var precent:Double = (spent.toDouble()/budget.toDouble())*100
+                    if(budget.toInt() == 0)
+                        precent = 0.0
+                    val finalPer:Double = String.format("%.2f", precent).toDouble()
+                    if(budget.toInt() == 0)
+                        precent = 0.0
+                    binding.progressText.text = "$finalPer%"
+                    binding.Prog.setProgress(finalPer.toInt(),true)
 
-                    }
-                    else
-                    {
-                        Toast.makeText(context,"User Not Found!",Toast.LENGTH_LONG).show()
-                    }
                 }
-            userRef.update("lastIn",System.currentTimeMillis()).addOnFailureListener{
-                Toast.makeText(context,"User Not Found!",Toast.LENGTH_LONG).show()
+                else
+                {
+                    Toast.makeText(context,"User Not Found!",Toast.LENGTH_LONG).show()
+                }
             }
+        userRef.update("lastIn",System.currentTimeMillis()).addOnFailureListener{
+            Toast.makeText(context,"User Not Found!",Toast.LENGTH_LONG).show()
+            LogOut()
         }
-    }
 
+    }
 
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -223,14 +237,20 @@ class HomeFragment : Fragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when(item.itemId){
             R.id.logout_menu->{
-                auth.signOut()
-                val nav = Navigation.findNavController(view!!)
-                nav.navigate(R.id.action_homeFragment_to_loginFragment)
+                LogOut()
             }
         }
 
         return super.onOptionsItemSelected(item)
     }
 
-
+    override fun onResume() {
+        super.onResume()
+        (activity as AppCompatActivity?)!!.supportActionBar!!.show()
+    }
+    private fun LogOut() {
+        auth.signOut()
+        val nav = Navigation.findNavController(view!!)
+        nav.navigate(R.id.action_homeFragment_to_loginFragment)
+    }
 }

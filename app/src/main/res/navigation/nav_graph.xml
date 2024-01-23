@@ -25,6 +25,9 @@
         <action
             android:id="@+id/action_homeFragment_to_loginFragment"
             app:destination="@id/loginFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_transactionListFragment"
+            app:destination="@id/transactionListFragment" />
     </fragment>
     <fragment
         android:id="@+id/loginFragment"
@@ -48,6 +51,15 @@
             app:destination="@id/loginFragment" />
         <action
             android:id="@+id/action_signUpFragment_to_homeFragment"
+            app:destination="@id/homeFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/transactionListFragment"
+        android:name="com.kinshuk.budgetmanaget.fragments.TransactionListFragment"
+        android:label="fragment_transaction_list"
+        tools:layout="@layout/fragment_transaction_list" >
+        <action
+            android:id="@+id/action_transactionListFragment_to_homeFragment"
             app:destination="@id/homeFragment" />
     </fragment>
 </navigation>
