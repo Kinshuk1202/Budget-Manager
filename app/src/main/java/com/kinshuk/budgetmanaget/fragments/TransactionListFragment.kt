@@ -36,7 +36,7 @@ class TransactionListFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        (activity as AppCompatActivity?)!!.supportActionBar!!.hide()
+        (activity as AppCompatActivity?)!!.supportActionBar!!.title = "Transactions made this month"
         binding = FragmentTransactionListBinding.inflate(layoutInflater)
         db = Firebase.firestore
         auth = FirebaseAuth.getInstance()
@@ -72,15 +72,25 @@ class TransactionListFragment : Fragment() {
                                 )
                             )
                         }
+                        usersTransationList = usersTransationList.reversed() as MutableList<Transaction>
                         binding.recycler.layoutManager = LinearLayoutManager(context)
                         binding.recycler.adapter = TransactionListAdapter(usersTransationList)
+
+                        if(usersTransationList.isEmpty())
+                        {
+                            binding.empty.visibility = View.VISIBLE
+                            binding.recycler.visibility = View.GONE
+                        }
+                        else
+                        {
+                            binding.empty.visibility = View.GONE
+                            binding.recycler.visibility = View.VISIBLE
+                        }
                     }
                     binding.CorutineProgBar.visibility = View.GONE
-                    binding.recycler.visibility = View.VISIBLE
-
                 }
             }.addOnFailureListener{
-                Toast.makeText(context!!.applicationContext,"Unexpectd error! Try Again",Toast.LENGTH_LONG).show()
+                Toast.makeText(context!!.applicationContext,"Unexpected error! Try Again",Toast.LENGTH_LONG).show()
             }
 
     }

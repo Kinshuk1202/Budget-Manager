@@ -2,21 +2,21 @@ package com.kinshuk.budgetmanaget.fragments
 
 import android.app.Dialog
 import android.os.Bundle
-import android.transition.Transition
 import android.util.Log
 import android.view.*
-import android.widget.*
+import android.widget.EditText
+import android.widget.RadioGroup
+import android.widget.Toast
+import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources.getDrawable
 import androidx.core.text.isDigitsOnly
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
 import com.google.android.material.button.MaterialButton
-import com.google.android.material.datepicker.MaterialTextInputPicker
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FieldValue
-import com.google.firebase.firestore.FieldValue.arrayRemove
 import com.google.firebase.firestore.FieldValue.arrayUnion
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
@@ -27,7 +27,6 @@ import com.kinshuk.budgetmanaget.databinding.FragmentHomeBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.w3c.dom.Text
 import java.util.*
 
 
@@ -40,9 +39,15 @@ class HomeFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         (activity as AppCompatActivity?)!!.supportActionBar!!.show()
+        (activity as AppCompatActivity?)!!.supportActionBar!!.setTitle(R.string.app_name)
         (activity as AppCompatActivity?)!!.supportActionBar!!.
                 setBackgroundDrawable(getDrawable(context!!.applicationContext,R.color.themeBg))
         setHasOptionsMenu(true)
+
+        val callback = requireActivity().onBackPressedDispatcher.addCallback(this) {
+            requireActivity().finish()
+        }
+        callback.isEnabled = true
     }
 
     override fun onCreateView(
@@ -59,8 +64,9 @@ class HomeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        initValues()
-
+        CoroutineScope(Dispatchers.IO).launch{
+            initValues()
+        }
         binding.editBudget.setOnClickListener{
             showEditDialog()
         }
@@ -70,6 +76,28 @@ class HomeFragment : Fragment() {
         binding.showAll.setOnClickListener {
             val navControler = Navigation.findNavController(it)
             navControler.navigate(R.id.action_homeFragment_to_transactionListFragment)
+        }
+    }
+
+    private fun ResetValues(lstMonth:Int) {
+        val c = Calendar.getInstance()
+        val month = c[Calendar.MONTH]
+        Log.d("TAGYY",month.toString())
+        Log.d("TAGYY",lstMonth.toString())
+        if(month !=lstMonth)
+        {
+            userRef.update("totalTransactions", mutableListOf<Transaction>())
+            userRef.update("budget",0)
+            userRef.update("spent", 0)
+            binding.BudgetTv.text = "₹0"
+            binding.SpentTv.text = "₹0"
+            binding.safeTv.text = "₹0/day"
+            binding.progressText.text = "0.00%"
+            binding.Prog.setProgress(0,true)
+        }
+        userRef.update("month",month).addOnFailureListener{
+            Toast.makeText(context,"User Not Found!",Toast.LENGTH_LONG).show()
+            LogOut()
         }
     }
 
@@ -130,7 +158,7 @@ class HomeFragment : Fragment() {
                 val finalSpent = if (!type) money + current else current - money
                 userRef.update("spent", finalSpent).addOnSuccessListener {
                     Toast.makeText(context?.applicationContext, "Added Sucessfully", Toast.LENGTH_LONG).show()
-                    initValues()
+                     initValues()
                 }
             }
         }.addOnFailureListener {
@@ -156,14 +184,13 @@ class HomeFragment : Fragment() {
             val newVal:EditText = view.findViewById(R.id.budgetEt)
             val budgetVal = newVal.text.toString()
             if(budgetVal.isNotEmpty() && budgetVal.isDigitsOnly()){
-                Log.d("TAGY",budgetVal.isDigitsOnly().toString())
                 userRef.update("budget",budgetVal.toInt()).addOnFailureListener {
                     binding.CorutineProgBar.visibility = View.GONE
                     binding.fullscreen.visibility = View.VISIBLE
                     Toast.makeText(context,"Unexpected error! Try Again",Toast.LENGTH_LONG).show()
                 }
                     .addOnSuccessListener {
-                       initValues()
+                        initValues()
                     }
                 dialog.dismiss()
             }
@@ -191,13 +218,12 @@ class HomeFragment : Fragment() {
                     val name = data?.get("name").toString()
                     val budget = data?.get("budget").toString()
                     val spent = data?.get("spent").toString()
-                    val preTimeStamp = data?.get("lastIn").toString()
+                    val lstMonth = data?.get("month").toString().toInt()
                     binding.BudgetTv.text = "₹$budget"
                     binding.SpentTv.text = "₹$spent"
                     binding.GreetTv.text = name
                     binding.CorutineProgBar.visibility = View.GONE
                     binding.fullscreen.visibility = View.VISIBLE
-
                     val calendar = Calendar.getInstance()
                     val lastDay: Int = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
                     val currentDay: Int = calendar.get(Calendar.DAY_OF_MONTH)
@@ -214,6 +240,7 @@ class HomeFragment : Fragment() {
                         precent = 0.0
                     binding.progressText.text = "$finalPer%"
                     binding.Prog.setProgress(finalPer.toInt(),true)
+                    ResetValues(lstMonth)
 
                 }
                 else
@@ -225,6 +252,7 @@ class HomeFragment : Fragment() {
             Toast.makeText(context,"User Not Found!",Toast.LENGTH_LONG).show()
             LogOut()
         }
+
 
     }
 
@@ -247,6 +275,7 @@ class HomeFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         (activity as AppCompatActivity?)!!.supportActionBar!!.show()
+        (activity as AppCompatActivity?)!!.supportActionBar!!.setTitle(R.string.app_name)
     }
     private fun LogOut() {
         auth.signOut()

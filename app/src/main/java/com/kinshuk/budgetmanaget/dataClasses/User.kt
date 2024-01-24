@@ -6,5 +6,6 @@ data class User(
     var lastIn:Long,
     var Budget:Int = 0,
     var spent:Int = 0,
+    var month:Int,
     var totalTransactions: MutableList<Transaction> = mutableListOf()
     )

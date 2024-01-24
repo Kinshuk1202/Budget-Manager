@@ -14,6 +14,7 @@ import com.google.firebase.ktx.Firebase
 import com.kinshuk.budgetmanaget.R
 import com.kinshuk.budgetmanaget.dataClasses.User
 import com.kinshuk.budgetmanaget.databinding.FragmentSignUpBinding
+import java.util.*
 
 
 class SignUpFragment : Fragment() {
@@ -52,7 +53,9 @@ class SignUpFragment : Fragment() {
             {
                 auth.createUserWithEmailAndPassword(email,pass).addOnCompleteListener{
                     if (it.isSuccessful) {
-                        val user = User(name, email,System.currentTimeMillis())
+                        val c = Calendar.getInstance()
+                        val month = c[Calendar.MONTH]
+                        val user = User(name, email,System.currentTimeMillis(), month = month)
                         val db = Firebase.firestore
                         it.result.user?.let { it1 -> db.collection("users").document(it1.uid) }
                             ?.set(user)
