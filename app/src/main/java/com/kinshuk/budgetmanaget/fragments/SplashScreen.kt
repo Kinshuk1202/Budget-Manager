@@ -29,7 +29,7 @@ class SplashScreen : Fragment() {
         // Inflate the layout for this fragment
 
         (activity as AppCompatActivity?)!!.supportActionBar!!.hide()
-        FirebaseApp.initializeApp(context!!.applicationContext)
+//        FirebaseApp.initializeApp(context!!.applicationContext)
         return inflater.inflate(R.layout.fragment_splash_screen, container, false)
     }
 
