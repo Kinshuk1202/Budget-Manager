@@ -267,6 +267,20 @@ class HomeFragment : Fragment() {
             R.id.logout_menu->{
                 LogOut()
             }
+            R.id.resetAll->{
+                val updates = hashMapOf(
+                    "totalTransactions" to mutableListOf<Transaction>(),
+                    "budget" to 0,
+                    "spent" to 0
+                )
+                userRef.update(updates)
+                    .addOnSuccessListener {
+                        initValues()
+                    }
+                    .addOnFailureListener {
+                        Toast.makeText(context,"Unexpected error, try again!",Toast.LENGTH_LONG).show()
+                    }
+            }
         }
 
         return super.onOptionsItemSelected(item)
